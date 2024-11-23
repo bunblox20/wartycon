@@ -4,6 +4,30 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bunbl
 -- Crear la interfaz
 local Window = Library.CreateLib("Teleportation UI", "RJTheme3")
 
+-- Función para generar una plataforma temporal
+local function createPlatform(player)
+    local platform = Instance.new("Part")
+    platform.Size = Vector3.new(10, 1, 10)
+    platform.Position = player.Character.HumanoidRootPart.Position - Vector3.new(0, 5, 0)
+    platform.Anchored = true
+    platform.BrickColor = BrickColor.new("Bright yellow")
+    platform.Name = "TemporaryPlatform"
+    platform.Parent = workspace
+
+    -- Detectar cuando el jugador deja de tocar la plataforma
+    local connection
+    connection = platform.Touched:Connect(function(hit)
+        if hit.Parent == player.Character then
+            -- Esperar a que deje de tocarla
+            task.wait(2)
+            if not player.Character.HumanoidRootPart.Position.Y > platform.Position.Y + 2 then
+                connection:Disconnect()
+                platform:Destroy()
+            end
+        end
+    end)
+end
+
 -- Pestaña de Teleports
 local TeleportTab = Window:NewTab("Teleport")
 local TeleportSection = TeleportTab:NewSection("Zonas de Teletransporte")
@@ -35,33 +59,48 @@ local BestZonesSection = BestZonesTab:NewSection("Mejores Sonas de Teletransport
 
 -- Teletransportes de Mejores Zonas
 BestZonesSection:NewButton("Instalación (Mejorada)", "Teletransporta a la mejor instalación", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-102.90, -91.58, -2.05)
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(-102.90, -91.58, -2.05)
+    createPlatform(player)
 end)
 
 BestZonesSection:NewButton("Presa del Río (Mejorada)", "Teletransporta a la mejor presa del río", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(73.85, -3.41, -2078.20)
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(73.85, -3.41, -2078.20)
+    createPlatform(player)
 end)
 
 BestZonesSection:NewButton("Almacén (Mejorado)", "Teletransporta al mejor almacén", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(2099.89, -13.11, 165.74)
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(2099.89, -13.11, 165.74)
+    createPlatform(player)
 end)
 
 BestZonesSection:NewButton("Ciudad (Mejorada)", "Teletransporta a la mejor ciudad", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-126.55, -33.63, 2094.55)
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(-126.55, -33.63, 2094.55)
+    createPlatform(player)
 end)
 
 -- Pestaña de Extras
 local ExtrasTab = Window:NewTab("Extras")
 local ExtrasSection = ExtrasTab:NewSection("Opciones Extras")
 
+-- Botón para ejecutar el Aimbot
+ExtrasSection:NewButton("Aimbot", "Ejecuta Aimbot V2", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/refs/heads/main/Resources/Scripts/Aimbot%20V2%20GUI.lua"))()
+end)
+
+-- Opción de Infinite Yield
 ExtrasSection:NewButton("Infinite Yield", "Carga Infinite Yield", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 end)
 
--- Configuración
+-- Pestaña de Configuración
 local ConfigTab = Window:NewTab("Configuración")
 local ConfigSection = ConfigTab:NewSection("Opciones de Configuración")
 
+-- Tecla para abrir/cerrar la interfaz
 ConfigSection:NewKeybind("Cerrar UI", "Tecla para abrir/cerrar la interfaz", Enum.KeyCode.LeftAlt, function()
     Library:ToggleUI()
 end)
