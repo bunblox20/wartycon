@@ -82,6 +82,13 @@ BestZonesSection:NewButton("Ciudad (Mejorada)", "Teletransporta a la mejor ciuda
     createPlatform(player)
 end)
 
+-- **Nuevo botón de la Torre de Radio en Mejores Sonas**
+BestZonesSection:NewButton("Torre de Radio (Mejorada)", "Teletransporta a la mejor Torre de Radio", function()
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(-2078.64, -7.47, 57.63)
+    createPlatform(player)
+end)
+
 -- Pestaña de Extras
 local ExtrasTab = Window:NewTab("Extras")
 local ExtrasSection = ExtrasTab:NewSection("Opciones Extras")
