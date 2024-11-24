@@ -12,211 +12,205 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/bunblox20/ainbot/refs
 local Aimbot = getgenv().Aimbot
 local Settings, FOVSettings, Functions = Aimbot.Settings, Aimbot.FOVSettings, Aimbot.Functions
 
+--// Load UI Library (UI interface)
 local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
 
-local Parts = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}
-
---// Frame
-Library.UnloadCallback = Functions.Exit
-
+--// Create Main Window
 local MainFrame = Library:CreateWindow({
-	Name = "Aimbot V2 & Teleport",
-	Themeable = {
-		Image = "7059346386",
-		Info = "Made by Exunys\nPowered by Pepsi's UI Library",
-		Credit = false
-	},
-	Background = "",
-	Theme = [[{"__Designer.Colors.section":"ADC7FF","__Designer.Colors.topGradient":"1B242F","__Designer.Settings.ShowHideKey":"Enum.KeyCode.RightShift","__Designer.Colors.otherElementText":"54637D","__Designer.Colors.hoveredOptionBottom":"38667D","__Designer.Background.ImageAssetID":"","__Designer.Colors.unhoveredOptionTop":"407495","__Designer.Colors.innerBorder":"2C4168","__Designer.Colors.unselectedOption":"4E6EA0","__Designer.Background.UseBackgroundImage":true,"__Designer.Files.WorkspaceFile":"Aimbot V2","__Designer.Colors.main":"23A0FF","__Designer.Colors.outerBorder":"162943","__Designer.Background.ImageColor":"FFFFFF","__Designer.Colors.tabText":"C9DFF1","__Designer.Colors.elementBorder":"111D26","__Designer.Colors.sectionBackground":"0E141C","__Designer.Colors.selectedOption":"558AC2","__Designer.Colors.background":"11182A","__Designer.Colors.bottomGradient":"202B42","__Designer.Background.ImageTransparency":95,"__Designer.Colors.hoveredOptionTop":"4885A0","__Designer.Colors.elementText":"7692B8","__Designer.Colors.unhoveredOptionBottom":"5471C4"}]]
+    Name = "Aimbot V2 & Teleport", -- Name of the window
+    Themeable = {
+        Image = "7059346386", -- Window background image asset
+        Info = "Made by Exunys\nPowered by Pepsi's UI Library",
+        Credit = false -- Disable showing credit
+    }
 })
 
---// Tabs
+--// Tabs for Aimbot and Teleport
 local TeleportTab = MainFrame:CreateTab({
-	Name = "Teleport"
+    Name = "Teleport"
 })
 
 local AimbotTab = MainFrame:CreateTab({
-	Name = "Aimbot"
+    Name = "Aimbot"
 })
 
---// Teleport - Sections
-
+--// Teleport Section
 local TeleportLocations = TeleportTab:CreateSection({
-	Name = "Teleport Locations"
+    Name = "Teleport Locations"
 })
 
 local TeleportExtras = TeleportTab:CreateSection({
-	Name = "Extras"
+    Name = "Extras"
 })
 
---// Aimbot - Sections
-
+--// Aimbot Section
 local AimbotSettings = AimbotTab:CreateSection({
-	Name = "Settings"
+    Name = "Settings"
 })
 
 local AimbotFOVSettings = AimbotTab:CreateSection({
-	Name = "FOV Settings"
+    Name = "FOV Settings"
 })
 
---// Teleport Locations - Buttons
+--// Teleport Locations Buttons
 
 TeleportLocations:AddButton({
-	Name = "Instalación",
-	Callback = function()
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-21.13, -25.72, -71.03)
-	end
-})
-
-TeleportLocations:AddButton({
-	Name = "Torre de Radio",
-	Callback = function()
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-2078.64, -7.47, 57.63)
-	end
+    Name = "Instalación",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-21.13, -25.72, -71.03)
+    end
 })
 
 TeleportLocations:AddButton({
-	Name = "Presa del Rio",
-	Callback = function()
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(22.34, 92.15, -1858.19)
-	end
+    Name = "Torre de Radio",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-2078.64, -7.47, 57.63)
+    end
 })
 
 TeleportLocations:AddButton({
-	Name = "Almacén",
-	Callback = function()
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(2069.64, 29.92, 44.33)
-	end
+    Name = "Presa del Rio",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(22.34, 92.15, -1858.19)
+    end
 })
 
 TeleportLocations:AddButton({
-	Name = "Ciudad",
-	Callback = function()
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-152.41, 25.09, 2064.51)
-	end
+    Name = "Almacén",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(2069.64, 29.92, 44.33)
+    end
+})
+
+TeleportLocations:AddButton({
+    Name = "Ciudad",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-152.41, 25.09, 2064.51)
+    end
 })
 
 --// Teleport Extras
 
 TeleportExtras:AddToggle({
-	Name = "Infinity Yield",
-	Value = false,
-	Callback = function(value)
-		if value then
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-		end
-	end
+    Name = "Infinity Yield",
+    Value = false,
+    Callback = function(value)
+        if value then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+        end
+    end
 })
 
 TeleportExtras:AddButton({
-	Name = "Cerrar Interfaz",
-	Callback = function()
-		Library:Unload()
-	end
+    Name = "Cerrar Interfaz",
+    Callback = function()
+        Library:Unload()
+    end
 })
 
---// Aimbot - Settings
+--// Aimbot Settings
 
 AimbotSettings:AddToggle({
-	Name = "Enabled",
-	Value = Settings.Enabled,
-	Callback = function(New, Old)
-		Settings.Enabled = New
-	end
+    Name = "Enabled",
+    Value = Settings.Enabled,
+    Callback = function(New, Old)
+        Settings.Enabled = New
+    end
 }).Default = Settings.Enabled
 
 AimbotSettings:AddToggle({
-	Name = "Toggle",
-	Value = Settings.Toggle,
-	Callback = function(New, Old)
-		Settings.Toggle = New
-	end
+    Name = "Toggle",
+    Value = Settings.Toggle,
+    Callback = function(New, Old)
+        Settings.Toggle = New
+    end
 }).Default = Settings.Toggle
 
 AimbotSettings:AddDropdown({
-	Name = "Lock Part",
-	Value = Parts[1],
-	Callback = function(New, Old)
-		Settings.LockPart = New
-	end,
-	List = Parts
-}).Default = Parts[1]
+    Name = "Lock Part",
+    Value = "Head", -- Default part to lock
+    Callback = function(New, Old)
+        Settings.LockPart = New
+    end,
+    List = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}
+}).Default = "Head"
 
 AimbotSettings:AddTextbox({
-	Name = "Hotkey",
-	Value = Settings.TriggerKey,
-	Callback = function(New, Old)
-		Settings.TriggerKey = New
-	end
+    Name = "Hotkey",
+    Value = Settings.TriggerKey,
+    Callback = function(New, Old)
+        Settings.TriggerKey = New
+    end
 }).Default = Settings.TriggerKey
 
 AimbotSettings:AddSlider({
-	Name = "Sensitivity",
-	Value = Settings.Sensitivity,
-	Callback = function(New, Old)
-		Settings.Sensitivity = New
-	end,
-	Min = 0,
-	Max = 1,
-	Decimals = 2
+    Name = "Sensitivity",
+    Value = Settings.Sensitivity,
+    Callback = function(New, Old)
+        Settings.Sensitivity = New
+    end,
+    Min = 0,
+    Max = 1,
+    Decimals = 2
 }).Default = Settings.Sensitivity
 
 AimbotSettings:AddToggle({
-	Name = "Team Check",
-	Value = Settings.TeamCheck,
-	Callback = function(New, Old)
-		Settings.TeamCheck = New
-	end
+    Name = "Team Check",
+    Value = Settings.TeamCheck,
+    Callback = function(New, Old)
+        Settings.TeamCheck = New
+    end
 }).Default = Settings.TeamCheck
 
 AimbotSettings:AddToggle({
-	Name = "Wall Check",
-	Value = Settings.WallCheck,
-	Callback = function(New, Old)
-		Settings.WallCheck = New
-	end
+    Name = "Wall Check",
+    Value = Settings.WallCheck,
+    Callback = function(New, Old)
+        Settings.WallCheck = New
+    end
 }).Default = Settings.WallCheck
 
 --// FOV Settings
 
 AimbotFOVSettings:AddToggle({
-	Name = "Enabled",
-	Value = FOVSettings.Enabled,
-	Callback = function(New, Old)
-		FOVSettings.Enabled = New
-	end
+    Name = "Enabled",
+    Value = FOVSettings.Enabled,
+    Callback = function(New, Old)
+        FOVSettings.Enabled = New
+    end
 }).Default = FOVSettings.Enabled
 
 AimbotFOVSettings:AddSlider({
-	Name = "Amount",
-	Value = FOVSettings.Amount,
-	Callback = function(New, Old)
-		FOVSettings.Amount = New
-	end,
-	Min = 10,
-	Max = 300
+    Name = "Amount",
+    Value = FOVSettings.Amount,
+    Callback = function(New, Old)
+        FOVSettings.Amount = New
+    end,
+    Min = 10,
+    Max = 300
 }).Default = FOVSettings.Amount
 
 AimbotFOVSettings:AddColorpicker({
-	Name = "Color",
-	Value = FOVSettings.Color,
-	Callback = function(New, Old)
-		FOVSettings.Color = New
-	end
+    Name = "Color",
+    Value = FOVSettings.Color,
+    Callback = function(New, Old)
+        FOVSettings.Color = New
+    end
 }).Default = FOVSettings.Color
 
---// Key Bind to Toggle Interface
+--// Keybind to Close Interface
 
 MainFrame:CreateKeybind({
-	Name = "Cerrar Interfaz",
-	Callback = function()
-		Library:Unload()
-	end,
-	Override = true,
-	Options = {
-		{KeyCode = Enum.KeyCode.LeftShift, Mode = Enum.KeyCode.LeftShift}
-	}
+    Name = "Cerrar Interfaz",
+    Callback = function()
+        Library:Unload()
+    end,
+    Override = true,
+    Options = {
+        {KeyCode = Enum.KeyCode.LeftShift, Mode = Enum.KeyCode.LeftShift}
+    }
 })
 
---// Functions to load/unload or exit the interface
+--// Final setup
 Functions:Exit()
+
