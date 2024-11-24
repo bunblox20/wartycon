@@ -1,180 +1,119 @@
---// Crear la interfaz de usuario
+-- Carga la biblioteca de interfaz de usuario
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bunblox20/SONIC-BASICO/refs/heads/master/sonic2"))()
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.Name = "AimbotUI"
+-- Crear la interfaz
+local Window = Library.CreateLib("Teleportation UI", "RJTheme3")
 
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 300)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -150)
-MainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-MainFrame.Parent = ScreenGui
+-- Función para generar una plataforma temporal
+local function createPlatform(player)
+    local platform = Instance.new("Part")
+    platform.Size = Vector3.new(10, 1, 10)
+    platform.Position = player.Character.HumanoidRootPart.Position - Vector3.new(0, 5, 0)
+    platform.Anchored = true
+    platform.BrickColor = BrickColor.new("Bright yellow")
+    platform.Name = "TemporaryPlatform"
+    platform.Parent = workspace
 
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "Aimbot Settings"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-Title.Parent = MainFrame
-
-local ToggleAimbotButton = Instance.new("TextButton")
-ToggleAimbotButton.Size = UDim2.new(0, 200, 0, 40)
-ToggleAimbotButton.Position = UDim2.new(0.5, -100, 0.2, 0)
-ToggleAimbotButton.Text = "Toggle Aimbot"
-ToggleAimbotButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleAimbotButton.BackgroundColor3 = Color3.fromRGB(0, 191, 255)
-ToggleAimbotButton.Parent = MainFrame
-
-local SensitivitySlider = Instance.new("TextBox")
-SensitivitySlider.Size = UDim2.new(0, 200, 0, 30)
-SensitivitySlider.Position = UDim2.new(0.5, -100, 0.35, 0)
-SensitivitySlider.Text = "Sensitivity: 0"
-SensitivitySlider.TextColor3 = Color3.fromRGB(255, 255, 255)
-SensitivitySlider.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-SensitivitySlider.ClearTextOnFocus = false
-SensitivitySlider.Parent = MainFrame
-
-local TeamCheckToggle = Instance.new("TextButton")
-TeamCheckToggle.Size = UDim2.new(0, 200, 0, 40)
-TeamCheckToggle.Position = UDim2.new(0.5, -100, 0.5, 0)
-TeamCheckToggle.Text = "Enable Team Check"
-TeamCheckToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-TeamCheckToggle.BackgroundColor3 = Color3.fromRGB(0, 191, 255)
-TeamCheckToggle.Parent = MainFrame
-
-local WallCheckToggle = Instance.new("TextButton")
-WallCheckToggle.Size = UDim2.new(0, 200, 0, 40)
-WallCheckToggle.Position = UDim2.new(0.5, -100, 0.65, 0)
-WallCheckToggle.Text = "Enable Wall Check"
-WallCheckToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-WallCheckToggle.BackgroundColor3 = Color3.fromRGB(0, 191, 255)
-WallCheckToggle.Parent = MainFrame
-
---// Configuración del Aimbot
-local aimbotEnabled = false
-local teamCheck = false
-local wallCheck = false
-local sensitivity = 0
-
---// Función para activar o desactivar el aimbot
-local function toggleAimbot()
-    aimbotEnabled = not aimbotEnabled
-    if aimbotEnabled then
-        print("Aimbot Activado")
-    else
-        print("Aimbot Desactivado")
-    end
-end
-
---// Función para ajustar la sensibilidad
-local function updateSensitivity(value)
-    sensitivity = tonumber(value) or 0
-    SensitivitySlider.Text = "Sensitivity: " .. sensitivity
-end
-
---// Funciones para activar/desactivar Team Check y Wall Check
-local function toggleTeamCheck()
-    teamCheck = not teamCheck
-    TeamCheckToggle.Text = teamCheck and "Disable Team Check" or "Enable Team Check"
-    print("Team Check: " .. (teamCheck and "Enabled" or "Disabled"))
-end
-
-local function toggleWallCheck()
-    wallCheck = not wallCheck
-    WallCheckToggle.Text = wallCheck and "Disable Wall Check" or "Enable Wall Check"
-    print("Wall Check: " .. (wallCheck and "Enabled" or "Disabled"))
-end
-
---// Asignar eventos de los botones
-ToggleAimbotButton.MouseButton1Click:Connect(toggleAimbot)
-SensitivitySlider.FocusLost:Connect(function()
-    updateSensitivity(SensitivitySlider.Text)
-end)
-TeamCheckToggle.MouseButton1Click:Connect(toggleTeamCheck)
-WallCheckToggle.MouseButton1Click:Connect(toggleWallCheck)
-
---// Aimbot funcionalidad (Este es el código principal de aimbot)
-local RunService = game:GetService("RunService")
-local Camera = workspace.CurrentCamera
-local LocalPlayer = game.Players.LocalPlayer
-local Players = game.Players
-
-local function getClosestPlayer()
-    local closestPlayer = nil
-    local shortestDistance = math.huge
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-            local headPosition = player.Character.Head.Position
-            local screenPosition, onScreen = Camera:WorldToViewportPoint(headPosition)
-            if onScreen then
-                local distance = (Vector2.new(screenPosition.X, screenPosition.Y) - Vector2.new(game:GetService("UserInputService"):GetMouseLocation().X, game:GetService("UserInputService"):GetMouseLocation().Y)).Magnitude
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    closestPlayer = player
-                end
+    -- Detectar cuando el jugador deja de tocar la plataforma
+    local connection
+    connection = platform.Touched:Connect(function(hit)
+        if hit.Parent == player.Character then
+            -- Esperar a que deje de tocarla
+            task.wait(2)
+            if not player.Character.HumanoidRootPart.Position.Y > platform.Position.Y + 2 then
+                connection:Disconnect()
+                platform:Destroy()
             end
         end
-    end
-    return closestPlayer
+    end)
 end
 
---// Aimbot - Movimiento del mouse y enfoque al objetivo
-RunService.RenderStepped:Connect(function()
-    if aimbotEnabled then
-        local closestPlayer = getClosestPlayer()
-        if closestPlayer and closestPlayer.Character then
-            local headPosition = closestPlayer.Character.Head.Position
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, headPosition)
-        end
-    end
+-- Pestaña de Teleports
+local TeleportTab = Window:NewTab("Teleport")
+local TeleportSection = TeleportTab:NewSection("Zonas de Teletransporte")
+
+-- Teletransportes de Zonas
+TeleportSection:NewButton("Instalación", "Teletransporta a la instalación", function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-21.13, -25.72, -71.03)
 end)
 
---// Implementar el clic derecho para apuntar automáticamente
-local UserInputService = game:GetService("UserInputService")
-local isRightClicking = false
-
-UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        isRightClicking = true
-        aimbotEnabled = true  -- Habilitar el aimbot al hacer clic derecho
-        print("Aimbot Activado por clic derecho")
-    end
+TeleportSection:NewButton("Torre de Radio", "Teletransporta a la torre de radio", function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-2073.50, 161.96, 56.07)
 end)
 
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        isRightClicking = false
-        aimbotEnabled = false  -- Desactivar el aimbot al soltar clic derecho
-        print("Aimbot Desactivado por clic derecho")
-    end
+TeleportSection:NewButton("Presa del Río", "Teletransporta a la presa del río", function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(22.34, 92.15, -1858.19)
 end)
 
---// Permitir mover la interfaz
-local dragging = false
-local dragStart = nil
-local startPos = nil
-
-MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-    end
+TeleportSection:NewButton("Almacén", "Teletransporta al almacén", function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(2069.64, 29.92, 44.33)
 end)
 
-MainFrame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
+TeleportSection:NewButton("Ciudad", "Teletransporta a la ciudad", function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-152.41, 25.09, 2064.51)
 end)
 
-MainFrame.InputChanged:Connect(function(input)
-    if dragging then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
+-- Pestaña de Mejores Sonas
+local BestZonesTab = Window:NewTab("Mejores Sonas")
+local BestZonesSection = BestZonesTab:NewSection("Mejores Sonas de Teletransporte")
+
+-- Teletransportes de Mejores Zonas
+BestZonesSection:NewButton("Instalación (Mejorada)", "Teletransporta a la mejor instalación", function()
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(-102.90, -91.58, -2.05)
+    createPlatform(player)
 end)
 
---// Finalizar
-print("Aimbot con interfaz cargado correctamente")
+BestZonesSection:NewButton("Presa del Río (Mejorada)", "Teletransporta a la mejor presa del río", function()
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(73.85, -3.41, -2078.20)
+    createPlatform(player)
+end)
+
+BestZonesSection:NewButton("Almacén (Mejorado)", "Teletransporta al mejor almacén", function()
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(2099.89, -13.11, 165.74)
+    createPlatform(player)
+end)
+
+BestZonesSection:NewButton("Ciudad (Mejorada)", "Teletransporta a la mejor ciudad", function()
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(-126.55, -33.63, 2094.55)
+    createPlatform(player)
+end)
+
+-- **Nuevo botón de la Torre de Radio en Mejores Sonas**
+BestZonesSection:NewButton("Torre de Radio (Mejorada)", "Teletransporta a la mejor Torre de Radio", function()
+    local player = game.Players.LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(-2078.64, -7.47, 57.63)
+    createPlatform(player)
+end)
+
+-- Pestaña de Extras
+local ExtrasTab = Window:NewTab("Extras")
+local ExtrasSection = ExtrasTab:NewSection("Opciones Extras")
+
+-- Botón para ejecutar el Aimbot
+ExtrasSection:NewButton("Aimbot", "Ejecuta Aimbot V2", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/refs/heads/main/Resources/Scripts/Aimbot%20V2%20GUI.lua"))()
+end)
+
+-- Opción de Infinite Yield
+ExtrasSection:NewButton("Infinite Yield", "Carga Infinite Yield", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+-- Pestaña de Configuración
+local ConfigTab = Window:NewTab("Configuración")
+local ConfigSection = ConfigTab:NewSection("Opciones de Configuración")
+
+-- Tecla para abrir/cerrar la interfaz
+ConfigSection:NewKeybind("Cerrar UI", "Tecla para abrir/cerrar la interfaz", Enum.KeyCode.LeftAlt, function()
+    Library:ToggleUI()
+end)
+
+-- Créditos
+local CreditsTab = Window:NewTab("Créditos")
+local CreditsSection = CreditsTab:NewSection("Creador")
+
+CreditsSection:NewLabel("Hecho por ChatGPT")
