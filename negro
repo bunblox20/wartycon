@@ -1,186 +1,222 @@
--- // Interfaz principal
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = OrionLib:MakeWindow({
-    Name = "Teleport & Aimbot",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "TeleportAimbotConfig"
+--// Cache
+
+local loadstring, game, getgenv, setclipboard = loadstring, game, getgenv, setclipboard
+
+--// Loaded check
+if getgenv().Aimbot then return end
+
+--// Load Aimbot V2 (Raw)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/bunblox20/ainbot/refs/heads/master/primero"))()
+
+--// Variables
+local Aimbot = getgenv().Aimbot
+local Settings, FOVSettings, Functions = Aimbot.Settings, Aimbot.FOVSettings, Aimbot.Functions
+
+local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
+
+local Parts = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}
+
+--// Frame
+Library.UnloadCallback = Functions.Exit
+
+local MainFrame = Library:CreateWindow({
+	Name = "Aimbot V2 & Teleport",
+	Themeable = {
+		Image = "7059346386",
+		Info = "Made by Exunys\nPowered by Pepsi's UI Library",
+		Credit = false
+	},
+	Background = "",
+	Theme = [[{"__Designer.Colors.section":"ADC7FF","__Designer.Colors.topGradient":"1B242F","__Designer.Settings.ShowHideKey":"Enum.KeyCode.RightShift","__Designer.Colors.otherElementText":"54637D","__Designer.Colors.hoveredOptionBottom":"38667D","__Designer.Background.ImageAssetID":"","__Designer.Colors.unhoveredOptionTop":"407495","__Designer.Colors.innerBorder":"2C4168","__Designer.Colors.unselectedOption":"4E6EA0","__Designer.Background.UseBackgroundImage":true,"__Designer.Files.WorkspaceFile":"Aimbot V2","__Designer.Colors.main":"23A0FF","__Designer.Colors.outerBorder":"162943","__Designer.Background.ImageColor":"FFFFFF","__Designer.Colors.tabText":"C9DFF1","__Designer.Colors.elementBorder":"111D26","__Designer.Colors.sectionBackground":"0E141C","__Designer.Colors.selectedOption":"558AC2","__Designer.Colors.background":"11182A","__Designer.Colors.bottomGradient":"202B42","__Designer.Background.ImageTransparency":95,"__Designer.Colors.hoveredOptionTop":"4885A0","__Designer.Colors.elementText":"7692B8","__Designer.Colors.unhoveredOptionBottom":"5471C4"}]]
 })
 
--- // Variables generales
-local Environment = getgenv().Aimbot or {}
-getgenv().Aimbot = Environment
-local Settings = Environment.Settings or {}
-local FOVSettings = Environment.FOVSettings or {}
-
--- // Inicializar Configuración Predeterminada
-Environment.Settings = Settings
-Settings.Enabled = true
-Settings.TeamCheck = false
-Settings.AliveCheck = true
-Settings.WallCheck = false
-Settings.Sensitivity = 0
-Settings.ThirdPerson = false
-Settings.ThirdPersonSensitivity = 3
-Settings.TriggerKey = "MouseButton2"
-Settings.Toggle = false
-Settings.LockPart = "Head"
-
-Environment.FOVSettings = FOVSettings
-FOVSettings.Enabled = true
-FOVSettings.Visible = true
-FOVSettings.Amount = 90
-FOVSettings.Color = Color3.fromRGB(255, 255, 255)
-FOVSettings.LockedColor = Color3.fromRGB(255, 70, 70)
-FOVSettings.Transparency = 0.5
-FOVSettings.Sides = 60
-FOVSettings.Thickness = 1
-FOVSettings.Filled = false
-
--- // Variables locales
-local Camera = workspace.CurrentCamera
-local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-Environment.FOVCircle = Drawing.new("Circle")
-Environment.FOVCircle.Visible = false
-
-local function updateFOVCircle()
-    if FOVSettings.Enabled then
-        local circle = Environment.FOVCircle
-        circle.Radius = FOVSettings.Amount
-        circle.Thickness = FOVSettings.Thickness
-        circle.Filled = FOVSettings.Filled
-        circle.NumSides = FOVSettings.Sides
-        circle.Color = FOVSettings.Color
-        circle.Transparency = FOVSettings.Transparency
-        circle.Visible = FOVSettings.Visible
-        circle.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
-    else
-        Environment.FOVCircle.Visible = false
-    end
-end
-
--- // Función para cancelar el lock
-local function CancelLock()
-    Environment.Locked = nil
-    Environment.FOVCircle.Color = FOVSettings.Color
-end
-
--- // Obtener el jugador más cercano
-local function GetClosestPlayer()
-    if not Environment.Locked then
-        local requiredDistance = FOVSettings.Enabled and FOVSettings.Amount or math.huge
-
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                local character = player.Character
-                local lockPart = character and character:FindFirstChild(Settings.LockPart)
-
-                if lockPart and character:FindFirstChildOfClass("Humanoid") then
-                    local humanoid = character:FindFirstChildOfClass("Humanoid")
-                    if Settings.TeamCheck and player.Team == LocalPlayer.Team then continue end
-                    if Settings.AliveCheck and humanoid.Health <= 0 then continue end
-
-                    local vector, onScreen = Camera:WorldToViewportPoint(lockPart.Position)
-                    local distance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(vector.X, vector.Y)).Magnitude
-
-                    if distance < requiredDistance and onScreen then
-                        requiredDistance = distance
-                        Environment.Locked = player
-                    end
-                end
-            end
-        end
-    end
-end
-
--- // Ciclo principal del Aimbot
-local function AimbotLoop()
-    if Environment.Locked and Settings.Enabled then
-        local lockPart = Environment.Locked.Character and Environment.Locked.Character:FindFirstChild(Settings.LockPart)
-        if lockPart then
-            local vector = Camera:WorldToViewportPoint(lockPart.Position)
-
-            if Settings.ThirdPerson then
-                local xSensitivity = Settings.ThirdPersonSensitivity or 1
-                local ySensitivity = Settings.ThirdPersonSensitivity or 1
-                mousemoverel((vector.X - UserInputService:GetMouseLocation().X) * xSensitivity, (vector.Y - UserInputService:GetMouseLocation().Y) * ySensitivity)
-            else
-                Camera.CFrame = CFrame.new(Camera.CFrame.Position, lockPart.Position)
-            end
-
-            Environment.FOVCircle.Color = FOVSettings.LockedColor
-        else
-            CancelLock()
-        end
-    end
-end
-
-game:GetService("RunService").RenderStepped:Connect(function()
-    updateFOVCircle()
-    if Settings.Enabled then
-        GetClosestPlayer()
-        AimbotLoop()
-    end
-end)
-
--- // Pestaña Aimbot
-local AimbotTab = Window:MakeTab({
-    Name = "Aimbot",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
+--// Tabs
+local TeleportTab = MainFrame:CreateTab({
+	Name = "Teleport"
 })
 
-AimbotTab:AddToggle({
-    Name = "Activar Aimbot",
-    Default = true,
-    Callback = function(value)
-        Settings.Enabled = value
-    end
+local AimbotTab = MainFrame:CreateTab({
+	Name = "Aimbot"
 })
 
-AimbotTab:AddToggle({
-    Name = "Mostrar FOV",
-    Default = true,
-    Callback = function(value)
-        FOVSettings.Visible = value
-    end
+--// Teleport - Sections
+
+local TeleportLocations = TeleportTab:CreateSection({
+	Name = "Teleport Locations"
 })
 
-AimbotTab:AddSlider({
-    Name = "Radio del FOV",
-    Min = 10,
-    Max = 500,
-    Default = 90,
-    Increment = 1,
-    Callback = function(value)
-        FOVSettings.Amount = value
-    end
+local TeleportExtras = TeleportTab:CreateSection({
+	Name = "Extras"
 })
 
-AimbotTab:AddDropdown({
-    Name = "Parte a Apuntar",
-    Default = "Head",
-    Options = {"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"},
-    Callback = function(value)
-        Settings.LockPart = value
-    end
+--// Aimbot - Sections
+
+local AimbotSettings = AimbotTab:CreateSection({
+	Name = "Settings"
 })
 
-AimbotTab:AddButton({
-    Name = "Reiniciar Configuración",
-    Callback = function()
-        Settings.Enabled = true
-        Settings.TeamCheck = false
-        Settings.AliveCheck = true
-        Settings.WallCheck = false
-        FOVSettings.Amount = 90
-        FOVSettings.Visible = true
-        Settings.LockPart = "Head"
-    end
+local AimbotFOVSettings = AimbotTab:CreateSection({
+	Name = "FOV Settings"
 })
 
--- // Iniciar interfaz
-OrionLib:Init()
+--// Teleport Locations - Buttons
+
+TeleportLocations:AddButton({
+	Name = "Instalación",
+	Callback = function()
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-21.13, -25.72, -71.03)
+	end
+})
+
+TeleportLocations:AddButton({
+	Name = "Torre de Radio",
+	Callback = function()
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-2078.64, -7.47, 57.63)
+	end
+})
+
+TeleportLocations:AddButton({
+	Name = "Presa del Rio",
+	Callback = function()
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(22.34, 92.15, -1858.19)
+	end
+})
+
+TeleportLocations:AddButton({
+	Name = "Almacén",
+	Callback = function()
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(2069.64, 29.92, 44.33)
+	end
+})
+
+TeleportLocations:AddButton({
+	Name = "Ciudad",
+	Callback = function()
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-152.41, 25.09, 2064.51)
+	end
+})
+
+--// Teleport Extras
+
+TeleportExtras:AddToggle({
+	Name = "Infinity Yield",
+	Value = false,
+	Callback = function(value)
+		if value then
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+		end
+	end
+})
+
+TeleportExtras:AddButton({
+	Name = "Cerrar Interfaz",
+	Callback = function()
+		Library:Unload()
+	end
+})
+
+--// Aimbot - Settings
+
+AimbotSettings:AddToggle({
+	Name = "Enabled",
+	Value = Settings.Enabled,
+	Callback = function(New, Old)
+		Settings.Enabled = New
+	end
+}).Default = Settings.Enabled
+
+AimbotSettings:AddToggle({
+	Name = "Toggle",
+	Value = Settings.Toggle,
+	Callback = function(New, Old)
+		Settings.Toggle = New
+	end
+}).Default = Settings.Toggle
+
+AimbotSettings:AddDropdown({
+	Name = "Lock Part",
+	Value = Parts[1],
+	Callback = function(New, Old)
+		Settings.LockPart = New
+	end,
+	List = Parts
+}).Default = Parts[1]
+
+AimbotSettings:AddTextbox({
+	Name = "Hotkey",
+	Value = Settings.TriggerKey,
+	Callback = function(New, Old)
+		Settings.TriggerKey = New
+	end
+}).Default = Settings.TriggerKey
+
+AimbotSettings:AddSlider({
+	Name = "Sensitivity",
+	Value = Settings.Sensitivity,
+	Callback = function(New, Old)
+		Settings.Sensitivity = New
+	end,
+	Min = 0,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.Sensitivity
+
+AimbotSettings:AddToggle({
+	Name = "Team Check",
+	Value = Settings.TeamCheck,
+	Callback = function(New, Old)
+		Settings.TeamCheck = New
+	end
+}).Default = Settings.TeamCheck
+
+AimbotSettings:AddToggle({
+	Name = "Wall Check",
+	Value = Settings.WallCheck,
+	Callback = function(New, Old)
+		Settings.WallCheck = New
+	end
+}).Default = Settings.WallCheck
+
+--// FOV Settings
+
+AimbotFOVSettings:AddToggle({
+	Name = "Enabled",
+	Value = FOVSettings.Enabled,
+	Callback = function(New, Old)
+		FOVSettings.Enabled = New
+	end
+}).Default = FOVSettings.Enabled
+
+AimbotFOVSettings:AddSlider({
+	Name = "Amount",
+	Value = FOVSettings.Amount,
+	Callback = function(New, Old)
+		FOVSettings.Amount = New
+	end,
+	Min = 10,
+	Max = 300
+}).Default = FOVSettings.Amount
+
+AimbotFOVSettings:AddColorpicker({
+	Name = "Color",
+	Value = FOVSettings.Color,
+	Callback = function(New, Old)
+		FOVSettings.Color = New
+	end
+}).Default = FOVSettings.Color
+
+--// Key Bind to Toggle Interface
+
+MainFrame:CreateKeybind({
+	Name = "Cerrar Interfaz",
+	Callback = function()
+		Library:Unload()
+	end,
+	Override = true,
+	Options = {
+		{KeyCode = Enum.KeyCode.LeftShift, Mode = Enum.KeyCode.LeftShift}
+	}
+})
+
+--// Functions to load/unload or exit the interface
+Functions:Exit()
