@@ -130,5 +130,51 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+--// Implementar el clic derecho para apuntar automáticamente
+local UserInputService = game:GetService("UserInputService")
+local isRightClicking = false
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        isRightClicking = true
+        aimbotEnabled = true  -- Habilitar el aimbot al hacer clic derecho
+        print("Aimbot Activado por clic derecho")
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        isRightClicking = false
+        aimbotEnabled = false  -- Desactivar el aimbot al soltar clic derecho
+        print("Aimbot Desactivado por clic derecho")
+    end
+end)
+
+--// Permitir mover la interfaz
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
+
+MainFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if dragging then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
 --// Finalizar
 print("Aimbot con interfaz cargado correctamente")
