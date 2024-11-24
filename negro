@@ -8,143 +8,177 @@ local Window = OrionLib:MakeWindow({
 })
 
 -- // Variables generales
-local teleportLocations = {
-    ["Instalación"] = Vector3.new(-21.13, -25.72, -71.03),
-    ["Torre de Radio"] = Vector3.new(-2073.50, 161.96, 56.07),
-    ["Presa del Río"] = Vector3.new(22.34, 92.15, -1858.19),
-    ["Almacén"] = Vector3.new(2069.64, 29.92, 44.33),
-    ["Ciudad"] = Vector3.new(-152.41, 25.09, 2064.51)
-}
+local Environment = getgenv().Aimbot or {}
+getgenv().Aimbot = Environment
+local Settings = Environment.Settings or {}
+local FOVSettings = Environment.FOVSettings or {}
 
-local bestLocations = {
-    ["Instalación"] = Vector3.new(-102.90, -91.58, -2.05),
-    ["Presa del Río"] = Vector3.new(73.85, -3.41, -2078.20),
-    ["Almacén"] = Vector3.new(2099.89, -13.11, 165.74),
-    ["Ciudad"] = Vector3.new(-126.55, -33.63, 2094.55),
-    ["Torre de Radio Extra"] = Vector3.new(-2078.64, -7.47, 57.63)
-}
+-- // Inicializar Configuración Predeterminada
+Environment.Settings = Settings
+Settings.Enabled = true
+Settings.TeamCheck = false
+Settings.AliveCheck = true
+Settings.WallCheck = false
+Settings.Sensitivity = 0
+Settings.ThirdPerson = false
+Settings.ThirdPersonSensitivity = 3
+Settings.TriggerKey = "MouseButton2"
+Settings.Toggle = false
+Settings.LockPart = "Head"
 
--- // Función para teletransportar
-local function teleportPlayer(location)
-    local character = game.Players.LocalPlayer.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        character.HumanoidRootPart.CFrame = CFrame.new(location)
+Environment.FOVSettings = FOVSettings
+FOVSettings.Enabled = true
+FOVSettings.Visible = true
+FOVSettings.Amount = 90
+FOVSettings.Color = Color3.fromRGB(255, 255, 255)
+FOVSettings.LockedColor = Color3.fromRGB(255, 70, 70)
+FOVSettings.Transparency = 0.5
+FOVSettings.Sides = 60
+FOVSettings.Thickness = 1
+FOVSettings.Filled = false
+
+-- // Variables locales
+local Camera = workspace.CurrentCamera
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+Environment.FOVCircle = Drawing.new("Circle")
+Environment.FOVCircle.Visible = false
+
+local function updateFOVCircle()
+    if FOVSettings.Enabled then
+        local circle = Environment.FOVCircle
+        circle.Radius = FOVSettings.Amount
+        circle.Thickness = FOVSettings.Thickness
+        circle.Filled = FOVSettings.Filled
+        circle.NumSides = FOVSettings.Sides
+        circle.Color = FOVSettings.Color
+        circle.Transparency = FOVSettings.Transparency
+        circle.Visible = FOVSettings.Visible
+        circle.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+    else
+        Environment.FOVCircle.Visible = false
     end
 end
 
--- // Pestaña de Teletransporte
-local TeleportTab = Window:MakeTab({
-    Name = "Teleport",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-TeleportTab:AddSection({
-    Name = "Zonas Comunes"
-})
-
-for name, position in pairs(teleportLocations) do
-    TeleportTab:AddButton({
-        Name = name,
-        Callback = function()
-            teleportPlayer(position)
-        end
-    })
+-- // Función para cancelar el lock
+local function CancelLock()
+    Environment.Locked = nil
+    Environment.FOVCircle.Color = FOVSettings.Color
 end
 
-TeleportTab:AddSection({
-    Name = "Mejores Zonas"
-})
+-- // Obtener el jugador más cercano
+local function GetClosestPlayer()
+    if not Environment.Locked then
+        local requiredDistance = FOVSettings.Enabled and FOVSettings.Amount or math.huge
 
-for name, position in pairs(bestLocations) do
-    TeleportTab:AddButton({
-        Name = name,
-        Callback = function()
-            -- Crear una plataforma debajo del jugador
-            local character = game.Players.LocalPlayer.Character
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                local part = Instance.new("Part")
-                part.Size = Vector3.new(10, 1, 10)
-                part.Anchored = true
-                part.Position = character.HumanoidRootPart.Position - Vector3.new(0, 3, 0)
-                part.Parent = workspace
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                local character = player.Character
+                local lockPart = character and character:FindFirstChild(Settings.LockPart)
 
-                -- Desaparece después de 10 segundos o cuando el jugador deja de tocarlo
-                game:GetService("Debris"):AddItem(part, 10)
+                if lockPart and character:FindFirstChildOfClass("Humanoid") then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if Settings.TeamCheck and player.Team == LocalPlayer.Team then continue end
+                    if Settings.AliveCheck and humanoid.Health <= 0 then continue end
+
+                    local vector, onScreen = Camera:WorldToViewportPoint(lockPart.Position)
+                    local distance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(vector.X, vector.Y)).Magnitude
+
+                    if distance < requiredDistance and onScreen then
+                        requiredDistance = distance
+                        Environment.Locked = player
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- // Ciclo principal del Aimbot
+local function AimbotLoop()
+    if Environment.Locked and Settings.Enabled then
+        local lockPart = Environment.Locked.Character and Environment.Locked.Character:FindFirstChild(Settings.LockPart)
+        if lockPart then
+            local vector = Camera:WorldToViewportPoint(lockPart.Position)
+
+            if Settings.ThirdPerson then
+                local xSensitivity = Settings.ThirdPersonSensitivity or 1
+                local ySensitivity = Settings.ThirdPersonSensitivity or 1
+                mousemoverel((vector.X - UserInputService:GetMouseLocation().X) * xSensitivity, (vector.Y - UserInputService:GetMouseLocation().Y) * ySensitivity)
+            else
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, lockPart.Position)
             end
 
-            teleportPlayer(position)
+            Environment.FOVCircle.Color = FOVSettings.LockedColor
+        else
+            CancelLock()
         end
-    })
+    end
 end
 
--- // Pestaña de Extras
-local ExtrasTab = Window:MakeTab({
-    Name = "Extras",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-ExtrasTab:AddButton({
-    Name = "Infinity Yield",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+game:GetService("RunService").RenderStepped:Connect(function()
+    updateFOVCircle()
+    if Settings.Enabled then
+        GetClosestPlayer()
+        AimbotLoop()
     end
-})
+end)
 
--- // Nueva pestaña: Aimbot
+-- // Pestaña Aimbot
 local AimbotTab = Window:MakeTab({
     Name = "Aimbot",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-AimbotTab:AddButton({
+AimbotTab:AddToggle({
     Name = "Activar Aimbot",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/bunblox20/ainbot/refs/heads/master/primero"))()
+    Default = true,
+    Callback = function(value)
+        Settings.Enabled = value
     end
 })
 
-AimbotTab:AddSection({
-    Name = "Funciones de Aimbot"
+AimbotTab:AddToggle({
+    Name = "Mostrar FOV",
+    Default = true,
+    Callback = function(value)
+        FOVSettings.Visible = value
+    end
+})
+
+AimbotTab:AddSlider({
+    Name = "Radio del FOV",
+    Min = 10,
+    Max = 500,
+    Default = 90,
+    Increment = 1,
+    Callback = function(value)
+        FOVSettings.Amount = value
+    end
+})
+
+AimbotTab:AddDropdown({
+    Name = "Parte a Apuntar",
+    Default = "Head",
+    Options = {"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"},
+    Callback = function(value)
+        Settings.LockPart = value
+    end
 })
 
 AimbotTab:AddButton({
     Name = "Reiniciar Configuración",
     Callback = function()
-        -- Reinicia las configuraciones del Aimbot
-        getgenv().Aimbot.Functions.ResetSettings()
-    end
-})
-
-AimbotTab:AddButton({
-    Name = "Salir del Aimbot",
-    Callback = function()
-        getgenv().Aimbot.Functions.Exit()
-    end
-})
-
-AimbotTab:AddButton({
-    Name = "Copiar URL del Script",
-    Callback = function()
-        setclipboard("https://github.com/Exunys/Aimbot-V2")
-    end
-})
-
--- // Pestaña de Configuración
-local SettingsTab = Window:MakeTab({
-    Name = "Configuración",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-SettingsTab:AddKeybind({
-    Name = "Tecla para Cerrar Interfaz",
-    Default = Enum.KeyCode.RightShift,
-    Hold = false,
-    Callback = function()
-        OrionLib:Toggle()
+        Settings.Enabled = true
+        Settings.TeamCheck = false
+        Settings.AliveCheck = true
+        Settings.WallCheck = false
+        FOVSettings.Amount = 90
+        FOVSettings.Visible = true
+        Settings.LockPart = "Head"
     end
 })
 
