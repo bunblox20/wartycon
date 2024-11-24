@@ -1,59 +1,32 @@
---// Cache
+--// Cargar la librería de Teleportation Master UI
+local TeleportationUI = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)()
 
-local loadstring, game, getgenv, setclipboard = loadstring, game, getgenv, setclipboard
-
---// Loaded check
-if getgenv().Aimbot then return end
-
---// Load Aimbot V2 (Raw)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/bunblox20/ainbot/refs/heads/master/primero"))()
-
---// Variables
-local Aimbot = getgenv().Aimbot
-local Settings, FOVSettings, Functions = Aimbot.Settings, Aimbot.FOVSettings, Aimbot.Functions
-
---// Load UI Library (UI interface)
-local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
-
---// Create Main Window
-local MainFrame = Library:CreateWindow({
-    Name = "Aimbot V2 & Teleport", -- Name of the window
+--// Crear la ventana principal
+local MainWindow = TeleportationUI:CreateWindow({
+    Name = "Aimbot & Teleportation Master",
+    Size = UDim2.new(0, 500, 0, 400), -- Tamaño de la ventana
     Themeable = {
-        Image = "7059346386", -- Window background image asset
-        Info = "Made by Exunys\nPowered by Pepsi's UI Library",
-        Credit = false -- Disable showing credit
+        BackgroundColor = Color3.fromRGB(35, 35, 35),  -- Color de fondo de la interfaz
+        TextColor = Color3.fromRGB(255, 255, 255),     -- Color del texto
+        TitleColor = Color3.fromRGB(0, 191, 255)       -- Color del título
     }
 })
 
---// Tabs for Aimbot and Teleport
-local TeleportTab = MainFrame:CreateTab({
-    Name = "Teleport"
+--// Crear las pestañas
+local TeleportTab = MainWindow:CreateTab({
+    Name = "Teleportation"
 })
 
-local AimbotTab = MainFrame:CreateTab({
+local AimbotTab = MainWindow:CreateTab({
     Name = "Aimbot"
 })
 
---// Teleport Section
+--// Teleportación (Pestaña)
 local TeleportLocations = TeleportTab:CreateSection({
-    Name = "Teleport Locations"
+    Name = "Ubicaciones de Teleport"
 })
 
-local TeleportExtras = TeleportTab:CreateSection({
-    Name = "Extras"
-})
-
---// Aimbot Section
-local AimbotSettings = AimbotTab:CreateSection({
-    Name = "Settings"
-})
-
-local AimbotFOVSettings = AimbotTab:CreateSection({
-    Name = "FOV Settings"
-})
-
---// Teleport Locations Buttons
-
+-- Agregar botones para teletransportarse
 TeleportLocations:AddButton({
     Name = "Instalación",
     Callback = function()
@@ -89,128 +62,39 @@ TeleportLocations:AddButton({
     end
 })
 
---// Teleport Extras
+--// Aimbot (Pestaña)
+local AimbotSettings = AimbotTab:CreateSection({
+    Name = "Configuración del Aimbot"
+})
 
-TeleportExtras:AddToggle({
-    Name = "Infinity Yield",
-    Value = false,
-    Callback = function(value)
-        if value then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-        end
+-- Agregar controles para habilitar el Aimbot
+AimbotSettings:AddToggle({
+    Name = "Habilitar Aimbot",
+    Value = true,
+    Callback = function(Value)
+        print("Aimbot habilitado: " .. tostring(Value))
     end
 })
 
-TeleportExtras:AddButton({
-    Name = "Cerrar Interfaz",
-    Callback = function()
-        Library:Unload()
-    end
-})
-
---// Aimbot Settings
-
-AimbotSettings:AddToggle({
-    Name = "Enabled",
-    Value = Settings.Enabled,
-    Callback = function(New, Old)
-        Settings.Enabled = New
-    end
-}).Default = Settings.Enabled
-
-AimbotSettings:AddToggle({
-    Name = "Toggle",
-    Value = Settings.Toggle,
-    Callback = function(New, Old)
-        Settings.Toggle = New
-    end
-}).Default = Settings.Toggle
-
-AimbotSettings:AddDropdown({
-    Name = "Lock Part",
-    Value = "Head", -- Default part to lock
-    Callback = function(New, Old)
-        Settings.LockPart = New
-    end,
-    List = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}
-}).Default = "Head"
-
-AimbotSettings:AddTextbox({
-    Name = "Hotkey",
-    Value = Settings.TriggerKey,
-    Callback = function(New, Old)
-        Settings.TriggerKey = New
-    end
-}).Default = Settings.TriggerKey
-
+-- Agregar controles para configurar la sensibilidad
 AimbotSettings:AddSlider({
-    Name = "Sensitivity",
-    Value = Settings.Sensitivity,
-    Callback = function(New, Old)
-        Settings.Sensitivity = New
-    end,
+    Name = "Sensibilidad",
+    Value = 0.5,
     Min = 0,
     Max = 1,
-    Decimals = 2
-}).Default = Settings.Sensitivity
-
-AimbotSettings:AddToggle({
-    Name = "Team Check",
-    Value = Settings.TeamCheck,
-    Callback = function(New, Old)
-        Settings.TeamCheck = New
+    Callback = function(Value)
+        print("Sensibilidad configurada: " .. tostring(Value))
     end
-}).Default = Settings.TeamCheck
+})
 
-AimbotSettings:AddToggle({
-    Name = "Wall Check",
-    Value = Settings.WallCheck,
-    Callback = function(New, Old)
-        Settings.WallCheck = New
-    end
-}).Default = Settings.WallCheck
-
---// FOV Settings
-
-AimbotFOVSettings:AddToggle({
-    Name = "Enabled",
-    Value = FOVSettings.Enabled,
-    Callback = function(New, Old)
-        FOVSettings.Enabled = New
-    end
-}).Default = FOVSettings.Enabled
-
-AimbotFOVSettings:AddSlider({
-    Name = "Amount",
-    Value = FOVSettings.Amount,
-    Callback = function(New, Old)
-        FOVSettings.Amount = New
-    end,
-    Min = 10,
-    Max = 300
-}).Default = FOVSettings.Amount
-
-AimbotFOVSettings:AddColorpicker({
-    Name = "Color",
-    Value = FOVSettings.Color,
-    Callback = function(New, Old)
-        FOVSettings.Color = New
-    end
-}).Default = FOVSettings.Color
-
---// Keybind to Close Interface
-
-MainFrame:CreateKeybind({
+--// Función para cerrar la interfaz
+MainWindow:CreateKeybind({
     Name = "Cerrar Interfaz",
     Callback = function()
-        Library:Unload()
+        TeleportationUI:Unload()  -- Cerrar la interfaz
     end,
     Override = true,
     Options = {
-        {KeyCode = Enum.KeyCode.LeftShift, Mode = Enum.KeyCode.LeftShift}
+        {KeyCode = Enum.KeyCode.LeftShift, Mode = Enum.KeyCode.LeftShift} -- Asignar una tecla para cerrar la interfaz
     }
 })
-
---// Final setup
-Functions:Exit()
-
